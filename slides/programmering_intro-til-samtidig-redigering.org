@@ -1,0 +1,12 @@
+#+TITLE Intro til samtidig redigering
+* En innovasjonsdag en gang for lenge sen
+
+* Hva med CRDT
+* Hva er Woot?
+https://hal.inria.fr/inria-00071240/document
+
+* Hva er operational transform
+
+* hvordan løste vi dette naivt på visuell kortstokk ediotr?
+
+* 
