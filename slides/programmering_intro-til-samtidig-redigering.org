@@ -1,11 +1,53 @@
 #+TITLE Intro til samtidig redigering
 * En innovasjonsdag en gang for lenge sen
+Interessen startet med at jeg og Snorre hacket på en inneholdseditor for NRK.no som støttet samtidig redigerer fra flere journalister.
+Vi brukte da firebase for å synkronisere innhold mellom klienter. Siden firebase da ikke støttet lister, lagde Snorre en algoritme for å beholde rekkefølge og unngå konflikter.
 
+* Teorien bak
+Nygjerrig.
+
+** Causality, Convergence and Intention preservation
+- Causality: Alle operasjoner må utføres i samme rekkefølge på alle klienter
+- Convergence: Alle ser det samme
+- Intention preservation: Det du gjør påvirkes ikke av andre endringer som kommer fra andra klienter
+
+
+* Hva bruker andre editors – Operational Transform
+Brukes av feks google docs. Baserer seg på editering på offset og for å oppnå samme state på alle editors må det gjøres en transformasjon dersom det kommer endringer som er gjort av andre klienter før siste endring i denne klient.
+Feks hvis man har en tekst "abcd":
+- klient1 gjør en insert{1, 'a'} med ønsket resultat "aabcd" 
+- klient2 gjør en delete{2, 'c'} med ønsket resultat "abd"
+
+Når klient1 skal gjøre endringen fra klient2 må den transformere operasjonen til delete{3, 'c'}, siden tegnet på offset 3 nå er 'b'.
+* Drawbacks
+- Algoritmene for OT er komplekse.
+- For å få intention preservation kreves vektorklokker. En logisk klokk for hver klient.
 * Hva med CRDT
+Conflict-free replicated data type.
+Finnes ulike typer så som counters, ulike typer set og mest interessant for editors: sekvenser.
+Brukes ofte i distribuerte databaser
+
+Sekvensielle CRDT kan brukes som alternativ til Operational Transform.
+
 * Hva er Woot?
 https://hal.inria.fr/inria-00071240/document
 
-* Hva er operational transform
+Isteden for å sende insert{1, 'a'} sender vi insert{'a' < "a" < 'b'}
+
+** Hva med deletes?
+Vi fjerner ikke.. bare markerer som deleted.
+
+** Hvilke strukturer støtter woot?
+Alle linjære datastrukturer, feks lister eller et tre med rekkefølge
+
+** PCI konsistensmodell
+Ved å bruke følgende ting klarer vi oss uten causality
+*** Precondition preservation
+Operasjoner blir applisert dersom preconditions for dem er sann
+*** Convergence
+Alle klienter som har fått samme operasjoner applisert har samme state med et identiskt dokument
+*** Intention preservation
+Effekten av å applisere enhver operasjon er den samme på alle andre klienter som den er på kildeklienten
 
 * hvordan løste vi dette naivt på visuell kortstokk ediotr?
 
