@@ -11,7 +11,7 @@ init(Req, Opts) ->
 
 websocket_init(State) ->
     { connected, Id, Events } = event_server:connect_user(),
-    {reply, {text, jiffy:encode(#{<<"type">> => <<"connected">>, 
+    {reply, {text, jsone:encode(#{<<"type">> => <<"connected">>, 
 				  <<"connected">> => #{<<"siteId">> => Id, 
 						       <<"events">> => Events}})}, State}.
 
