@@ -11,7 +11,11 @@ Nygjerrig.
 - Convergence: Alle ser det samme
 - Intention preservation: Det du gjør påvirkes ikke av andre endringer som kommer fra andra klienter
 
-
+* Må bare innrømme
+- Dette er akademiskt.
+- Jeg har ikke helt skjønt alt
+- Jeg har gått full snowball-runde og lest alt
+- Fokusert på Woot
 * Hva bruker andre editors – Operational Transform
 Brukes av feks google docs. Baserer seg på editering på offset og for å oppnå samme state på alle editors må det gjøres en transformasjon dersom det kommer endringer som er gjort av andre klienter før siste endring i denne klient.
 Feks hvis man har en tekst "abcd":

@@ -6,6 +6,8 @@ window.addEventListener('load', () => {
 
     var localClock = 0;
 
+    const differ = new diff_match_patch();
+    
     const FIRST = {
 	id: { ns: "all", ng: "first" },
 	visible: false,
@@ -101,24 +103,33 @@ window.addEventListener('load', () => {
     function generateIns(pos, val) {
 	const cp = ithVisible(wstring, pos - 1) || FIRST;
 	const cn = ithVisible(wstring, pos) || LAST;
-	let c = {
-	    id: {
-		ns: siteId,
-		ng: localClock++
-	    },
-	    visible: true,
-	    cp: cp.id,
-	    cn: cn.id,
-	    alpha: val	
-	};
-	integrateIns(c, cp, cn);
-	broadcast(ins(c));
+
+	const vals = Array.isArray(val) ? val : [val];
+
+	let prev = cp;
+	vals.forEach(v => {	    
+	    let c = {
+		id: {
+		    ns: siteId,
+		    ng: localClock++
+		},
+		visible: true,
+		cp: prev.id,
+		cn: cn.id,
+		alpha: v	
+	    };
+	    prev = c;
+	    integrateIns(c, cp, cn, 1);
+	    broadcast(ins(c));	    
+	});		
     }
 
-    function generateDel(pos) {
-	const wchar = ithVisible(wstring, pos);
-	integrateDel(wchar);
-	broadcast(del(wchar));
+    function generateDel(pos, len = 1) {	
+	for (i = 0; i < len; i++) {
+	    const wchar = ithVisible(wstring, pos);
+	    integrateDel(wchar, -1);
+	    broadcast(del(wchar));
+	}	
     }
 
 
@@ -188,16 +199,25 @@ window.addEventListener('load', () => {
     // Apply event to model
     // ====================
 
-    function integrateDel(c) {
+    function currentEditorPosition() {
+	let c = ithVisible(wstring, editor.selectionStart);
+	return c ? pos(wstring, c) : Number.MAX_SAFE_INTEGER;
+    }
+    
+    function integrateDel(c, cursorCompensation = 0) {
+	let deletePos = pos(wstring, c);
+	let editorPositionShift = deletePos <= currentEditorPosition() ? -1 - cursorCompensation : 0;
 	c.visible = false;
-	updateView();
+	updateView(editorPositionShift);
     }
 
-    function integrateIns(c, cp, cn) {
+    function integrateIns(c, cp, cn, cursorCompensation = 0) {
 	let s = subseq(wstring, cp, cn);
 	if (s.length === 0) {
-	    wstring.splice(pos(wstring, cn), 0, c);
-	    updateView();
+	    let insertPos = pos(wstring, cn);
+	    let editorPositionShift = insertPos <= currentEditorPosition() ? 1 - cursorCompensation : 0;
+	    wstring.splice(insertPos, 0, c);
+	    updateView(editorPositionShift);
 	} else {
 	    let L = s.filter(d => {
 		let dcp = findById(wstring, d.cp);
@@ -216,41 +236,33 @@ window.addEventListener('load', () => {
     // interact with dom
     // =================
 
-    function updateView() {
+    function updateView(shiftSelection = 0) {
 	let curs = editor.selectionStart;
 	editor.value = value(wstring);
-	editor.setSelectionRange(curs+1, curs+1);
+	editor.setSelectionRange(curs+shiftSelection, curs+shiftSelection);
     }
 
-    function localEditorEvent(event) {
-	function getChar(event) {
-	    console.log("Event Key:", event.key);
-	    if (event.key.length === 1) {
-		return event.key;
-	    } else if (event.keyCode === 13) {
-		return '\n';
-	    } else {
-		return undefined;
+    function inputEvent(event) {	
+	const diff = differ.diff_main(value(wstring), editor.value);
+	//	let pos = editor.selectionStart;
+	let pos = 0;
+	diff.forEach(({0: dir, 1: change}) => {
+	    switch(dir) {
+	    case 1:
+		generateIns(pos, change.split(''));
+		pos += change.length;
+	    	break;
+	    case -1:
+		generateDel(pos, change.length);
+	    	break;
+	    case 0:
+		pos += change.length;
+	    	break;
 	    }
-	}
-
-	console.log("Offset: ", editor.selectionStart);
-	let char = getChar(event);
-	console.log("cod:", event.code);
-	if (event.keyCode === 8) { //backspace
-	    generateDel(editor.selectionStart - 1);
-	    event.preventDefault();
-	} else if (event.keyCode === 46) { //delete
-	    generateDel(editor.selectionStart);
-	    event.preventDefault();
-	} else if (char) {
-	    generateIns(editor.selectionStart, char);
-	    event.preventDefault();
-	}
-
+	});
     }
 
-    editor.addEventListener("keydown", localEditorEvent);
+    editor.addEventListener("input", inputEvent);
 
     processPool();
 });
