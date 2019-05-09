@@ -37,7 +37,6 @@ broadcast(Msg) ->
 
 init([]) ->
     process_flag(trap_exit, true),
-    io:fwrite(<<"Starting gen server">>),
     {ok, #state{}}.
 
 handle_call({connect_user, Pid}, _From, S) ->
