@@ -1,12 +1,12 @@
 window.addEventListener('load', () => {
 
+    const differ = new diff_match_patch();
+    
     // =====================
     // Concurrent edit model
     // =====================
 
-    var localClock = 0;
-
-    const differ = new diff_match_patch();
+    var localClock = 0;   
     
     const FIRST = {
 	id: { ns: "all", ng: "first" },
@@ -198,11 +198,6 @@ window.addEventListener('load', () => {
     // ====================
     // Apply event to model
     // ====================
-
-    function currentEditorPosition() {
-	let c = ithVisible(wstring, editor.selectionStart);
-	return c ? pos(wstring, c) : Number.MAX_SAFE_INTEGER;
-    }
     
     function integrateDel(c, cursorCompensation = 0) {
 	let deletePos = pos(wstring, c);
@@ -236,6 +231,11 @@ window.addEventListener('load', () => {
     // interact with dom
     // =================
 
+    function currentEditorPosition() {
+	let c = ithVisible(wstring, editor.selectionStart);
+	return c ? pos(wstring, c) : Number.MAX_SAFE_INTEGER;
+    }
+    
     function updateView(shiftSelection = 0) {
 	let curs = editor.selectionStart;
 	editor.value = value(wstring);
