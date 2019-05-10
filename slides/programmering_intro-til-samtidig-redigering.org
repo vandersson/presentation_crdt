@@ -1,42 +1,50 @@
 #+TITLE Intro til samtidig redigering
 * En innovasjonsdag en gang for lenge sen
-Interessen startet med at jeg og Snorre hacket på en inneholdseditor for NRK.no som støttet samtidig redigerer fra flere journalister.
-Vi brukte da firebase for å synkronisere innhold mellom klienter. Siden firebase da ikke støttet lister, lagde Snorre en algoritme for å beholde rekkefølge og unngå konflikter.
-
-* Teorien bak
-Nygjerrig.
-
-** Causality, Convergence and Intention preservation
-- Causality: Alle operasjoner må utføres i samme rekkefølge på alle klienter
-- Convergence: Alle ser det samme
-- Intention preservation: Det du gjør påvirkes ikke av andre endringer som kommer fra andra klienter
-
-* Må bare innrømme
-- Dette er akademiskt.
+- Jeg og Snorre Brekke ønsket å lage en innholdseditor som støttet samtidig redigiering
+- Bakket av firebase, med konflikt-minimering
+* Disclaimer
+- Dette er akademiskt
 - Jeg har ikke helt skjønt alt
-- Jeg har gått full snowball-runde og lest alt
-- Fokusert på Woot
-* Hva bruker andre editors – Operational Transform
-Brukes av feks google docs. Baserer seg på editering på offset og for å oppnå samme state på alle editors må det gjøres en transformasjon dersom det kommer endringer som er gjort av andre klienter før siste endring i denne klient.
-Feks hvis man har en tekst "abcd":
-- klient1 gjør en insert{1, 'a'} med ønsket resultat "aabcd" 
-- klient2 gjør en delete{2, 'c'} med ønsket resultat "abd"
+- Jeg har ikke gått full snowball-runde og lest alt
+- Fokusert på en spesifik CRDT-algoritme
+* Hvordan fungerer en 'ordentlig' samtidig editor?
+** Causality, Convergence and Intention preservation
+*** Causality
+Alle operasjoner må utføres i samme rekkefølge på alle klienter
+*** Convergence
+Alle klienter ser det samme
+*** Intention preservation
+Det du gjør påvirkes ikke av andre endringer som kommer fra andra klienter
+* Operational Transform
+Brukes av feks google docs
+** Basics
+- Sender kommandoer basert på index fra kilde-klient til andre
+- Insert{4, 'x'} eller Delete{3, 'y'}
+- Operasjoner må gjøres i samme rekkefølge på alle klienter
+eller transformeres (Operational Transform)
+** Ulemper
+- Vanskelig å få transformasjonen til å fungere med mange klienter
+** Kan man gjøre det enklere?
+* CRDT – Conflict-free Replicated Data Type
+** Datatyper med innebygd eventual consistency
+- Counters
+- Set
+- Sekvense
 
-Når klient1 skal gjøre endringen fra klient2 må den transformere operasjonen til delete{3, 'c'}, siden tegnet på offset 3 nå er 'b'.
-* Drawbacks
-- Algoritmene for OT er komplekse.
-- For å få intention preservation kreves vektorklokker. En logisk klokk for hver klient.
-* Hva med CRDT
-Conflict-free replicated data type.
-Finnes ulike typer så som counters, ulike typer set og mest interessant for editors: sekvenser.
-Brukes ofte i distribuerte databaser
+** Brukes av en del distribuerte databaser
+Talk på ndc i år for interesserte
+ https://ndcoslo.com/talk/living-in-eventually-consistent-reality/ 
 
-Sekvensielle CRDT kan brukes som alternativ til Operational Transform.
-
-* Hva er Woot?
+** Sekvensielle CRDT
+kan brukes som alternativ til Operational Transform.
+* WoOT
+Witout Operational Transform
 https://hal.inria.fr/inria-00071240/document
 
-Isteden for å sende insert{1, 'a'} sender vi insert{'a' < "a" < 'b'}
+For å endre 'abc' til 'axbc' sender vi
+insert{'a' < "x" < 'b'}
+isteden for å sende 
+insert{1, 'x'} 
 
 ** Hva med deletes?
 Vi fjerner ikke.. bare markerer som deleted.
@@ -44,15 +52,19 @@ Vi fjerner ikke.. bare markerer som deleted.
 ** Hvilke strukturer støtter woot?
 Alle linjære datastrukturer, feks lister eller et tre med rekkefølge
 
-** PCI konsistensmodell
-Ved å bruke følgende ting klarer vi oss uten causality
+** Konsistensmodell
 *** Precondition preservation
-Operasjoner blir applisert dersom preconditions for dem er sann
+Operasjoner blir applisert dersom de oppfyller preconditions
+Erstatter Causality fra OT
 *** Convergence
-Alle klienter som har fått samme operasjoner applisert har samme state med et identiskt dokument
+Alle klienter som har fått samme operasjoner 
+applisert har samme state med et identiskt dokument
 *** Intention preservation
-Effekten av å applisere enhver operasjon er den samme på alle andre klienter som den er på kildeklienten
+Effekten av å applisere enhver operasjon er den samme 
+på alle andre klienter som den er på kildeklienten
 
-* hvordan løste vi dette naivt på visuell kortstokk ediotr?
+ 
 
-* 
+
+
+
